@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>ULTRA DOPAMINE SLOTS 🎰🔥</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-purple: #7000ff;
+            --neon-pink: #ff007b;
+            --gold: #ffcc00;
+        }
+
+        body {
+            background-color: #050505;
+            color: white;
+            font-family: 'Arial Black', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            perspective: 1000px;
+        }
+
+        /* Efeito de Tremida de Tela */
+        .shake { animation: shake 0.2s; }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-3px, 0px) rotate(-1deg); }
+            40% { transform: translate(3px, 2px) rotate(1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            80% { transform: translate(3px, -1px) rotate(1deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .casino-machine {
+            background: linear-gradient(180deg, #111 0%, #222 100%);
+            padding: 50px;
+            border-radius: 50px;
+            border: 8px solid #333;
+            box-shadow: 0 0 100px rgba(112, 0, 255, 0.3), inset 0 0 20px #000;
+            text-align: center;
+            position: relative;
+            border-image: linear-gradient(to bottom, var(--neon-purple), var(--neon-blue)) 1;
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background: rgba(0,0,0,0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+        }
+
+        .balance { color: #39ff14; font-size: 2rem; text-shadow: 0 0 15px #39ff14; }
+        
+        .slot-container {
+            display: flex;
+            gap: 20px;
+            margin: 40px 0;
+            background: #000;
+            padding: 20px;
+            border-radius: 30px;
+            box-shadow: inset 0 0 30px rgba(255,255,255,0.1);
+        }
+
+        .slot {
+            width: 120px;
+            height: 160px;
+            background: linear-gradient(to bottom, #111, #333);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6rem;
+            border: 2px solid #444;
+            transition: 0.1s cubic-bezier(.17,.67,.83,.67);
+        }
+
+        .spinning {
+            animation: fastSpin 0.1s infinite linear;
+            filter: blur(5px) brightness(1.5);
+        }
+
+        @keyframes fastSpin {
+            0% { transform: translateY(-10px); }
+            100% { transform: translateY(10px); }
+        }
+
+        .win-glow {
+            animation: winGlow 0.5s infinite alternate;
+        }
+
+        @keyframes winGlow {
+            from { box-shadow: 0 0 20px var(--gold); border-color: var(--gold); transform: scale(1); }
+            to { box-shadow: 0 0 60px var(--gold); border-color: #fff; transform: scale(1.1); }
+        }
+
+        button {
+            background: linear-gradient(45deg, var(--neon-pink), var(--neon-purple));
+            border: none;
+            padding: 25px 80px;
+            font-size: 2.5rem;
+            color: white;
+            border-radius: 100px;
+            cursor: pointer;
+            box-shadow: 0 12px 0 #500;
+            transition: 0.1s;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+
+        button:active { transform: translateY(8px); box-shadow: 0 4px 0 #500; }
+        button:hover { filter: brightness(1.2); }
+        button:disabled { filter: grayscale(1); cursor: not-allowed; }
+
+        #feedback {
+            height: 60px;
+            font-size: 2.5rem;
+            margin-top: 30px;
+            font-style: italic;
+            text-shadow: 0 0 10px #fff;
+        }
+
+        .xp-bar-container {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            margin-top: 20px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #xp-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--neon-blue);
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body id="body">
+
+    <div class="casino-machine" id="machine">
+        <div class="header-stats">
+            <div class="balance">R$ <span id="saldo">500</span></div>
+            <div style="color: var(--neon-blue)">LVL <span id="level">1</span></div>
+        </div>
+        
+        <div class="xp-bar-container"><div id="xp-fill"></div></div>
+
+        <div class="slot-container">
+            <div id="s1" class="slot">💎</div>
+            <div id="s2" class="slot">💎</div>
+            <div id="s3" class="slot">💎</div>
+        </div>
+
+        <div style="margin-bottom: 25px;">
+            <span style="font-size: 1.5rem; color: #888;">APOSTA: R$</span>
+            <input type="number" id="aposta" value="50" step="50" min="50" style="background: transparent; border: none; border-bottom: 2px solid var(--neon-pink); color: white; font-size: 2rem; width: 100px; text-align: center; outline: none;">
+        </div>
+
+        <button id="btn" onclick="jogar()">SPIN!</button>
+        <div id="feedback"></div>
+    </div>
+
+    <script>
+        let saldo = 500;
+        let xp = 0;
+        let level = 1;
+        const simbolos = ['⚡', '🔥', '👑', '7️⃣', '💎', '🚀', '🌈'];
+
+        function jogar() {
+            const bet = parseInt(document.getElementById('aposta').value);
+            const btn = document.getElementById('btn');
+            const feedback = document.getElementById('feedback');
+            const machine = document.getElementById('machine');
+            
+            if (bet > saldo) {
+                feedback.innerText = "SEM SALDO! 😱";
+                feedback.style.color = "red";
+                return;
+            }
+
+            // Início do Caos
+            saldo -= bet;
+            document.getElementById('saldo').innerText = saldo;
+            btn.disabled = true;
+            feedback.innerText = "GIRANDO!!!";
+            feedback.style.color = "white";
+            
+            const slots = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
+            slots.forEach(s => {
+                s.classList.add('spinning');
+                s.classList.remove('win-glow');
+            });
+
+            // Parada sequencial com suspense
+            slots.forEach((slot, i) => {
+                setTimeout(() => {
+                    slot.classList.remove('spinning');
+                    slot.innerText = simbolos[Math.floor(Math.random() * simbolos.length)];
+                    
+                    // Shake de tela a cada parada
+                    machine.classList.add('shake');
+                    setTimeout(() => machine.classList.remove('shake'), 200);
+
+                    if (i === 2) verificarResultado(bet);
+                }, 800 + (i * 700));
+            });
+        }
+
+        function verificarResultado(bet) {
+            const slots = [document.getElementById('s1'), document.getElementById('s2'), document.getElementById('s3')];
+            const res = slots.map(s => s.innerText);
+            const feedback = document.getElementById('feedback');
+            const btn = document.getElementById('btn');
+
+            if (res[0] === res[1] && res[1] === res[2]) {
+                // JACKPOT SUPREMO
+                const win = bet * 100;
+                saldo += win;
+                feedback.innerText = "🚀 MEGA JACKPOT R$ " + win + "!!! 🚀";
+                feedback.style.color = "#ffcc00";
+                slots.forEach(s => s.classList.add('win-glow'));
+                ganharXP(100);
+                explosaoDopamina();
+            } else if (res[0] === res[1] || res[1] === res[2] || res[0] === res[2]) {
+                // VITÓRIA PARCIAL
+                const win = bet * 5;
+                saldo += win;
+                feedback.innerText = "LUCRO! R$ " + win + " 🔥";
+                feedback.style.color = "#39ff14";
+                ganharXP(20);
+                confeteSimples();
+            } else {
+                feedback.innerText = "MAIS UMA VEZ! 💸";
+                feedback.style.color = "#888";
+                ganharXP(5);
+            }
+
+            document.getElementById('saldo').innerText = saldo;
+            btn.disabled = false;
+        }
+
+        function ganharXP(v) {
+            xp += v;
+            if (xp >= 100) {
+                xp = 0;
+                level++;
+                document.getElementById('level').innerText = level;
+                confeteSimples();
+            }
+            document.getElementById('xp-fill').style.width = xp + "%";
+        }
+
+        function explosaoDopamina() {
+            const end = Date.now() + 5000;
+            const colors = ['#ff007b', '#00f2ff', '#7000ff', '#ffcc00'];
+
+            (function frame() {
+                confetti({
+                    particleCount: 10,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: colors
+                });
+                confetti({
+                    particleCount: 10,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: colors
+                });
+
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+
+        function confeteSimples() {
+            confetti({ particleCount: 50, spread: 60, origin: { y: 0.7 } });
+        }
+    </script>
+</body>
+</html>
